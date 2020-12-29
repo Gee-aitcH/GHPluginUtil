@@ -1,5 +1,7 @@
 package pluginutil;
 
+import arc.graphics.Color;
+import arc.graphics.Colors;
 import java.io.FileWriter;
 import java.util.Scanner;
 
@@ -47,7 +49,8 @@ public class PluginUtil {
     public static long parseLong(String str, long def) {
         try{ return Long.parseLong(str); }catch (Exception e) { return def; }
     }
-    private String f(String str, Object... args){
+
+    public static String f(String str, Object... args){
         return String.format(str, args);
     }
     public static void w(FileWriter writer, String str) throws Exception {
@@ -55,5 +58,43 @@ public class PluginUtil {
     }
     public static String r(Scanner reader) throws Exception {
         return reader.nextLine().split(": ")[1];
+    }
+
+    public static String colorRemove(String str){
+        // Reference for This Holy Magic
+        // NetServer.java: fixName(), checkColor()
+        if(str.equals("[") || str.equals("]"))
+            return "";
+
+        for(int i = 0; i < str.length(); i++)
+            if(str.charAt(i) == '[' && i != str.length() - 1 && str.charAt(i + 1) != '[' && (i == 0 || str.charAt(i - 1) != '[')){
+                String prev = str.substring(0, i);
+                String next = str.substring(i);
+                String result = next;
+                for(int j = 1; j < next.length(); j++)
+                    if(next.charAt(j) == ']'){
+                        String color = next.substring(1, j);
+                        if(Colors.get(color.toUpperCase()) != null || Colors.get(color.toLowerCase()) != null){
+                            result = next.substring(j + 1);
+                            break;
+                        }else
+                            try{
+                                Color.valueOf(color);
+                                result = next.substring(j + 1);
+                                break;
+                            }catch(Exception e){
+                                result = next;
+                                break;
+                            }
+                    }
+
+                str = prev + result;
+            }
+        // Holy Magic Ends Here.
+
+        // Remove "[" at the end if any.
+        if (str.endsWith("["))
+            str = str.substring(0, str.length()-1);
+        return str;
     }
 }
