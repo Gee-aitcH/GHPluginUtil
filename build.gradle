@@ -4,7 +4,7 @@ apply plugin: 'maven'
 version '1.0'
 group = 'com.github.Gee-aitcH'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.14
 
 sourceSets.main.java.srcDirs = ["src"]
 
