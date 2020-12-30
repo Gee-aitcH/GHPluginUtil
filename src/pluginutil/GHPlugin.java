@@ -20,8 +20,8 @@ public class GHPlugin extends Plugin {
             CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg",
             VERSION = "1.0";
 
-    private final String plgn = "[scarlet]", pass = "[green]", announce = "[orange]", accent = "[accent]", clean = "[white]", ignore = "[lightgray]";
-    private boolean mode;
+    protected final String plgn = "[scarlet]", pass = "[green]", announce = "[orange]", accent = "[accent]", clean = "[white]", ignore = "[lightgray]";
+    protected boolean mode;
 
     //called when game initializes
     public GHPlugin(){
@@ -45,20 +45,20 @@ public class GHPlugin extends Plugin {
         handler.<Player>register(CMD, "[arg(s)...]", DESC, (args, player) -> commandHandler(args[0].split(" "), player, false));
     }
 
-    private void commandHandler(String[] arg, Player player, boolean s){
+    protected void commandHandler(String[] arg, Player player, boolean s){
     }
 
-    private void send(String color, String str){
+    protected void send(String color, String str){
         send(color, str, null);
     }
-    private void send(String color, String str, Player player) {
+    protected void send(String color, String str, Player player) {
         if (player == null)
             Call.sendMessage(plgn + PLUGIN + ": " + color + str);
         else
             player.sendMessage(plgn + PLUGIN + ": " + color + str);
     }
 
-    private void log(int mode, String str){
+    protected void log(int mode, String str){
         switch (mode){
             case 0 -> Log.info(PLUGIN + ": " + str);
             case 1 -> Log.warn(PLUGIN + ": " + str);
@@ -66,7 +66,7 @@ public class GHPlugin extends Plugin {
     }
 
     // o Stands for output. Bad name, I know, whatever.
-    private void o(int mode, String color, String msg, Player player, boolean server){
+    protected void o(int mode, String color, String msg, Player player, boolean server){
         if (server)
             log(mode, msg);
         else
@@ -74,11 +74,11 @@ public class GHPlugin extends Plugin {
     }
     // Util Stuff
 
-    private String cmd(boolean prefix){
+    protected String cmd(boolean prefix){
         return (prefix ? "/" : "") + CMD;
     }
 
-    private void write() {
+    protected void write() {
         try{
             FileWriter writer = new FileWriter(CONFIG_DIR);
             writer.write("Version: " + 1.0 + "\n");
@@ -90,7 +90,7 @@ public class GHPlugin extends Plugin {
         }
     }
 
-    private void read() {
+    protected void read() {
         try{
             File file = new File(CONFIG_DIR);
             boolean hasSave = !file.createNewFile();
