@@ -9,9 +9,9 @@ public class GHPlugin extends Plugin {
 
     // Modify PLUGIN, CMD, DESC and you will be fine.
     protected String
-            PLUGIN = "Plugin Name",
-            CMD = "plugin_command",
-            DESC = "Description for this plugin.",
+            PLUGIN = "ExamplePluginChangeThisPlease",
+            CMD = "example_cmd_change_this_please",
+            DESC = "Example Description Change This Please",
             CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg",
             VERSION = "1.0";
 
@@ -19,7 +19,7 @@ public class GHPlugin extends Plugin {
     protected boolean mode;
 
     //called when game initializes
-    public GHPlugin(){
+    public void init(){
         try {
             read();
         } catch (Exception e){
