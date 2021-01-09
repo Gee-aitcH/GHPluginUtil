@@ -2,6 +2,9 @@ package pluginutil;
 
 import arc.graphics.Color;
 import arc.graphics.Colors;
+import arc.util.Log;
+
+import java.io.File;
 import java.io.FileWriter;
 import java.util.Scanner;
 
@@ -96,5 +99,23 @@ public class PluginUtil {
         if (str.endsWith("["))
             str = str.substring(0, str.length()-1);
         return str;
+    }
+
+    public void moveOldFile(File file, String dir, String plugin) throws Exception {
+        file.renameTo(new File(dir + ".outdated"));
+        FileWriter writer = new FileWriter(dir + ".outdated");
+        Scanner reader = new Scanner(file);
+        while (reader.hasNextLine())
+            writer.write(reader.nextLine() + "\n");
+        writer.close();
+        log(0, "Outdated Config File Found. Moved to Directory \n[" + file.getAbsolutePath() + "].\n" +
+                "Outdated Config will be overwrite when a newer Outdated Config is detected.", plugin);
+    }
+
+    public void log(int mode, String msg, String plugin){
+        switch (mode){
+            case 0 -> Log.info(plugin + ": " + msg);
+            case 1 -> Log.warn(plugin + ": " + msg);
+        }
     }
 }

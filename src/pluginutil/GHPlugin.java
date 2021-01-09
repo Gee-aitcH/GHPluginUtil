@@ -5,19 +5,13 @@ import mindustry.*;
 import mindustry.gen.*;
 import mindustry.mod.*;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Scanner;
-
-import static pluginutil.PluginUtil.*;
-
 public class GHPlugin extends Plugin {
 
     // Modify PLUGIN, CMD, DESC and you will be fine.
     protected String
-            PLUGIN = "DiscordBot",
-            CMD = "killall",
-            DESC = "Vote for Killing All Troops.",
+            PLUGIN = "Plugin Name",
+            CMD = "plugin_command",
+            DESC = "Description for this plugin.",
             CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg",
             VERSION = "1.0";
 
