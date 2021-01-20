@@ -33,14 +33,21 @@ public class GHPlugin extends Plugin {
     // Called when game initializes
     public void init() {
         try {
-            initMap(this.getClass(), config_map, configurables);
+            initMap(getClass(), config_map, configurables);
             read();
-            Core.app.addListener(new ApplicationListener() {
-                @Override
-                public void update() {
-                    GHPlugin.this.update();
-                }
-            });
+
+            // If update method is declared in the class && the class is not GHPlugin
+            // Then add its update method to update list.
+            if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
+                    getClass() != GHPlugin.class) {
+
+                Core.app.addListener(new ApplicationListener() {
+                    @Override
+                    public void update() {
+                        GHPlugin.this.update();
+                    }
+                });
+            }
         } catch (Exception e) {
             mode = false;
             log(warn, "An Error has occurred. Plugin is turned off.");
@@ -48,9 +55,8 @@ public class GHPlugin extends Plugin {
         }
     }
 
-    // Update
+    // Update, Override to use.
     protected void update() {
-
     }
 
     // Return '/cmd' or 'cmd', depended by whether if it is used to print in chat or console.
@@ -90,7 +96,7 @@ public class GHPlugin extends Plugin {
     }
 
     // Read file
-    protected void read() {
+    protected void read() throws Exception {
         try {
             readFromFile(CONFIG_DIR, config_map, this);
         } catch (GHReadWriteException ghe) {
@@ -100,8 +106,6 @@ public class GHPlugin extends Plugin {
                 write();
                 log(warn, f("Config File Is Populated With Default Values"));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

@@ -34,6 +34,7 @@ public class GHReadWrite {
 
         for (Map.Entry<String, Field> entry : map.entrySet())
             writer.write(entry.getKey() + ": " + entry.getValue().get(instance) + "\n");
+
         writer.close();
     }
 
