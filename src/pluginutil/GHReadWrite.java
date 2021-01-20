@@ -33,7 +33,8 @@ public class GHReadWrite {
         FileWriter writer = new FileWriter(file);
 
         for (Map.Entry<String, Field> entry : map.entrySet())
-            writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+            writer.write(entry.getKey() + ": " + entry.getValue().get(instance) + "\n");
+        writer.close();
     }
 
     public static void readFromFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws Exception {
