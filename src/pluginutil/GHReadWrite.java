@@ -39,7 +39,7 @@ public class GHReadWrite {
     public static void readFromFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws Exception {
         File file = new File(dir);
         if (file.createNewFile())
-            throw new GHReadWriteException(f("Config File Created at Directory [%s].", file.getAbsoluteFile()));
+            throw new GHReadWriteException(f("Config File Created at Directory [%s].", file.getAbsoluteFile()), 0);
         Scanner reader = new Scanner(file);
         ArrayList<String> lines = new ArrayList<>();
         while (reader.hasNextLine())
@@ -54,7 +54,7 @@ public class GHReadWrite {
                     (lines.size() - map.size()) * (greater ? 1 : -1),
                     lines.size() - map.size() == 1 ? "" : "s",
                     greater ? "more" : "less",
-                    lines.size(), map.size()));
+                    lines.size(), map.size()), greater ? 1 : 2);
         }
 
         for (Map.Entry<String, Field> entry : map.entrySet()) {
@@ -91,8 +91,12 @@ public class GHReadWrite {
     }
 
     public static class GHReadWriteException extends Exception {
-        public GHReadWriteException(String message) {
+        public static final int NEW_FILE = 0, TOO_MANY_LINES = 1, TOO_FEW_LINES = 2;
+        public int type;
+
+        public GHReadWriteException(String message, int type) {
             super(message);
+            this.type = type;
         }
     }
 }
