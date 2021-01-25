@@ -2,7 +2,9 @@ package pluginutil;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ public class GHReadWrite {
         }
     }
 
-    public static void writeToFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws Exception {
+    public static void writeToFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws IOException, IllegalAccessException {
         File file = new File(dir);
         FileWriter writer = new FileWriter(file);
 
@@ -38,7 +40,7 @@ public class GHReadWrite {
         writer.close();
     }
 
-    public static void readFromFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws Exception {
+    public static void readFromFile(String dir, LinkedHashMap<String, Field> map, Object instance) throws IOException, GHReadWriteException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException {
         File file = new File(dir);
         if (file.createNewFile())
             throw new GHReadWriteException(f("Config File Created at Directory [%s].", file.getAbsoluteFile()), 0);
@@ -79,7 +81,7 @@ public class GHReadWrite {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void moveOldFile(File file, String dir, String plugin) throws Exception {
+    public static void moveOldFile(File file, String dir, String plugin) throws IOException {
         if (file == null)
             return;
         file.renameTo(new File(dir + ".outdated"));

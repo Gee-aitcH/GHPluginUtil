@@ -6,11 +6,15 @@ import mindustry.Vars;
 import mindustry.gen.Player;
 import mindustry.mod.Plugin;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 
 import static pluginutil.GHReadWrite.*;
 import static pluginutil.GHReadWrite.GHReadWriteException.NEW_FILE;
+import static pluginutil.PluginUtil.SendMode.info;
+import static pluginutil.PluginUtil.SendMode.warn;
 import static pluginutil.PluginUtil.*;
 
 @SuppressWarnings({"unused", "SameParameterValue"})
@@ -33,24 +37,24 @@ public class GHPlugin extends Plugin {
     // Called when game initializes
     public void init() {
         try {
+            if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
+                    getClass() != GHPlugin.class) {
+                Core.app.addListener(new ApplicationListener() {
+                    @Override
+                    public void update() {
+                        GHPlugin.this.update();
+                    }
+                });
+                log(info, "Update Method implemented.");
+            }
+        } catch (NoSuchMethodException ignored) {
+        }
+
+        try {// If update method is declared in the class && the class is not GHPlugin
+            // Then add its update method to update list.
             initMap(getClass(), config_map, configurables);
             read();
-
-            // If update method is declared in the class && the class is not GHPlugin
-            // Then add its update method to update list.
-            try {
-                if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
-                        getClass() != GHPlugin.class) {
-
-                    Core.app.addListener(new ApplicationListener() {
-                        @Override
-                        public void update() {
-                            GHPlugin.this.update();
-                        }
-                    });
-                }
-            } catch (NoSuchMethodException ignored) {
-            }
+            log(info, "Update Method implemented.");
         } catch (Exception e) {
             mode = false;
             log(warn, "An Error has occurred. Plugin is turned off.");
@@ -91,15 +95,13 @@ public class GHPlugin extends Plugin {
     protected void write() {
         try {
             writeToFile(CONFIG_DIR, config_map, this);
-        } catch (GHReadWriteException ghe) {
-            log(warn, f("Error Occurred While Writing: %s", ghe.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     // Read file
-    protected void read() throws Exception {
+    protected void read() throws IOException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException {
         try {
             readFromFile(CONFIG_DIR, config_map, this);
         } catch (GHReadWriteException ghe) {

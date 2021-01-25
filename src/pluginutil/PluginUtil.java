@@ -4,11 +4,10 @@ import arc.util.Log;
 import mindustry.gen.Call;
 import mindustry.gen.Player;
 
+import static pluginutil.PluginUtil.GHColors.plgn;
+
 @SuppressWarnings({"unused", "SameParameterValue"})
 public class PluginUtil {
-    public static final String plgn = "[scarlet]", pass = "[green]", announce = "[orange]", accent = "[accent]", clean = "[white]", ignore = "[lightgray]";
-    public static final int info = 0, warn = 1, err = 2, debug = 3;
-
     public static String f(String str, Object... args) {
         return String.format(str, args);
     }
@@ -44,5 +43,14 @@ public class PluginUtil {
             sendLog(mode, msg, plugin);
         if (server == null || !server)
             sendMsg(color, msg, player, plugin);
+    }
+
+    public static class GHColors {
+        public static final String plgn = "[scarlet]", pass = "[green]", announce = "[orange]", accent = "[accent]", clean = "[white]", ignore = "[lightgray]";
+    }
+
+    public static class SendMode {
+        public static final int info = 0, warn = 1, err = 2, debug = 3;
+        public static final Boolean toAll = null, toServer = true, toClient = false;
     }
 }

@@ -4,6 +4,7 @@ import arc.graphics.Color;
 import arc.graphics.Colors;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 
 @SuppressWarnings("unused")
 public class GHParse {
@@ -31,7 +32,7 @@ public class GHParse {
         try {
             Byte.parseByte(str);
             return true;
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return false;
         }
     }
@@ -43,7 +44,7 @@ public class GHParse {
     public static byte parseByte(String str, byte def) {
         try {
             return Byte.parseByte(str);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return def;
         }
     }
@@ -168,7 +169,7 @@ public class GHParse {
         return str;
     }
 
-    public static Object[] parseArr(String str, Object obj) throws Exception {
+    public static Object[] parseArr(String str, Object obj) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         if (obj == null) return null;
         Class<?> cls = obj.getClass().componentType();
         String[] arr = str.substring(1, str.length() - 1).split(",");
@@ -179,7 +180,7 @@ public class GHParse {
         return (Object[]) o;
     }
 
-    public static Object parseSthOrArr(String str, Object obj) throws Exception {
+    public static Object parseSthOrArr(String str, Object obj) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         if (obj == null) return null;
         if (obj.getClass().isArray())
             return parseArr(str, obj);
