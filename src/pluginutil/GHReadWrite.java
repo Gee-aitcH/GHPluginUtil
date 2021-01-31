@@ -66,7 +66,7 @@ public class GHReadWrite {
             String match = "";
 
             for (String line : lines) {
-                String[] split = line.split(": ", 1);
+                String[] split = line.split(": ", 2);
 
                 if (!split[0].equals(entry.getKey())) continue;
 
