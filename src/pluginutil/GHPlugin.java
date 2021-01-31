@@ -37,6 +37,8 @@ public class GHPlugin extends Plugin {
     // Called when game initializes
     public void init() {
         try {
+            // If update method is declared in the class && the class is not GHPlugin
+            // Then add its update method to update list.
             if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
                     getClass() != GHPlugin.class) {
                 Core.app.addListener(new ApplicationListener() {
@@ -50,16 +52,15 @@ public class GHPlugin extends Plugin {
         } catch (NoSuchMethodException ignored) {
         }
 
-        try {// If update method is declared in the class && the class is not GHPlugin
-            // Then add its update method to update list.
-            initMap(getClass(), config_map, configurables);
-            read();
-            log(info, "Update Method implemented.");
-        } catch (Exception e) {
-            mode = false;
-            log(warn, "An Error has occurred. Plugin is turned off.");
-            e.printStackTrace();
-        }
+        if (configurables.length > 0)
+            try {
+                initMap(getClass(), config_map, configurables);
+                read();
+            } catch (Exception e) {
+                mode = false;
+                log(warn, "An Error has occurred. Plugin is turned off.");
+                e.printStackTrace();
+            }
     }
 
     // Update, Override to use.
@@ -81,7 +82,7 @@ public class GHPlugin extends Plugin {
         sendMsg(color, msg, player, PLUGIN);
     }
 
-    // Send message to console, 0: info, 1: warn
+    // Send message to console
     protected void log(int mode, String msg) {
         sendLog(mode, msg, PLUGIN);
     }
@@ -95,6 +96,7 @@ public class GHPlugin extends Plugin {
     protected void write() {
         try {
             writeToFile(CONFIG_DIR, config_map, this);
+            log(info, "Configs Wrote To File.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -104,6 +106,7 @@ public class GHPlugin extends Plugin {
     protected void read() throws IOException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException {
         try {
             readFromFile(CONFIG_DIR, config_map, this);
+            log(info, "Configs Read From File.");
         } catch (GHReadWriteException ghe) {
             log(warn, f("Error Occurred While Reading: %s", ghe.getMessage()));
             if (ghe.type == NEW_FILE) {
