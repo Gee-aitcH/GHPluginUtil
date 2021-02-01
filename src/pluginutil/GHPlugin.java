@@ -4,11 +4,13 @@ import arc.ApplicationListener;
 import arc.Core;
 import mindustry.Vars;
 import mindustry.gen.Player;
+import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 
 import static pluginutil.GHReadWrite.*;
@@ -21,6 +23,7 @@ import static pluginutil.PluginUtil.*;
 public class GHPlugin extends Plugin {
 
     private static final LinkedHashMap<String, Field> config_map = new LinkedHashMap<>();
+    private static final String[] adminOnlyCommands = {"ghtestadminonly"};
 
     protected boolean mode;
 
@@ -47,20 +50,37 @@ public class GHPlugin extends Plugin {
                         GHPlugin.this.update();
                     }
                 });
-                log(info, "Update Method implemented.");
+                log(info, "Update method implemented.");
             }
         } catch (NoSuchMethodException ignored) {
         }
 
-        if (configurables.length > 0)
+        // Load values
+        if (configurables.length > 0) {
             try {
                 initMap(getClass(), config_map, configurables);
                 read();
+                log(info, "Values loaded from file(s).");
             } catch (Exception e) {
                 mode = false;
-                log(warn, "An Error has occurred. Plugin is turned off.");
+                log(warn, "An error has occurred. Plugin is turned off.");
                 e.printStackTrace();
             }
+        }
+
+        // Register the admin only commands at EnhancedHelpCommand plugin if it exists.
+        Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
+        if (mod != null) {
+            try {
+                Method add = mod.main.getClass().getMethod("add", String.class);
+                add.setAccessible(true);
+                for (String adminOnlyCommand : adminOnlyCommands)
+                    add.invoke(mod.main, adminOnlyCommand);
+                log(info, "Admin only command(s) registered.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // Update, Override to use.
