@@ -90,7 +90,7 @@ public class GHPlugin extends Plugin {
             Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
             if (mod != null) {
                 try {
-                    Field add = mod.main.getClass().getField("adminCommands");
+                    Field add = mod.main.getClass().getDeclaredField("adminCommands");
                     add.setAccessible(true);
                     HashSet<String> set = (HashSet<String>) add.get(mod.main);
                     set.addAll(Arrays.asList(adminOnlyCommands));
