@@ -21,6 +21,7 @@ import java.util.function.BiPredicate;
 
 import static pluginutil.GHReadWrite.*;
 import static pluginutil.GHReadWrite.GHReadWriteException.NEW_FILE;
+import static pluginutil.PluginUtil.GHColors.clean;
 import static pluginutil.PluginUtil.SendMode.info;
 import static pluginutil.PluginUtil.SendMode.warn;
 import static pluginutil.PluginUtil.*;
@@ -159,8 +160,18 @@ public class GHPlugin extends Plugin {
     }
 
     // Send message to all players
+    protected void msg(String msg) {
+        sendMsg(clean, msg, null);
+    }
+
+    // Send message to all players
     protected void msg(String color, String msg) {
         sendMsg(color, msg, null);
+    }
+
+    // Send message to certain player
+    protected void msg(String msg, Player player) {
+        sendMsg(clean, msg, player, PLUGIN);
     }
 
     // Send message to certain player
@@ -169,11 +180,27 @@ public class GHPlugin extends Plugin {
     }
 
     // Send message to console
+    protected void log(String msg) {
+        sendLog(info, msg, PLUGIN);
+    }
+
     protected void log(int mode, String msg) {
         sendLog(mode, msg, PLUGIN);
     }
 
     // Send message to all players, certain player or console.
+    protected void output(String msg, Player player, Boolean server) {
+        PluginUtil.output(info, clean, msg, player, server, PLUGIN);
+    }
+
+    protected void output(int mode, String msg, Player player, Boolean server) {
+        PluginUtil.output(mode, clean, msg, player, server, PLUGIN);
+    }
+
+    protected void output(String color, String msg, Player player, Boolean server) {
+        PluginUtil.output(info, color, msg, player, server, PLUGIN);
+    }
+
     protected void output(int mode, String color, String msg, Player player, Boolean server) {
         PluginUtil.output(mode, color, msg, player, server, PLUGIN);
     }
