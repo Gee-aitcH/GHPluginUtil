@@ -23,11 +23,11 @@ import static pluginutil.PluginUtil.*;
 public class GHPlugin extends Plugin {
 
     private static final LinkedHashMap<String, Field> config_map = new LinkedHashMap<>();
-    private static String[] adminOnlyCommands;
 
     protected boolean mode;
 
     protected static String[] configurables;
+    protected static String[] adminOnlyCommands;
     protected String PLUGIN, CONFIG_DIR, VERSION;
 
     public GHPlugin() {
