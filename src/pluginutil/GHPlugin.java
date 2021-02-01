@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -83,16 +82,13 @@ public class GHPlugin extends Plugin {
     }
 
     // Register the admin only commands in EnhancedHelpCommand plugin if it exists.
-    @SuppressWarnings("unchecked")
     private void registerAdminOnlyCommands() {
         if (adminOnlyCommands.length > 0) {
             Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
             if (mod != null) {
                 try {
-                    Field add = mod.main.getClass().getDeclaredField("adminCommands");
-                    add.setAccessible(true);
-                    HashSet<String> set = (HashSet<String>) add.get(mod.main);
-                    set.addAll(Arrays.asList(adminOnlyCommands));
+                    Method add = mod.main.getClass().getDeclaredMethod("adminCommands", String[].class);
+                    add.invoke(mod.main, (Object) adminOnlyCommands);
                     log(info, "Admin only command(s) registered.");
                 } catch (Exception e) {
                     log(warn, "An error has occurred while registering admin only command(s).");
