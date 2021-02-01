@@ -45,7 +45,6 @@ public class GHPlugin extends Plugin {
         configurables = new String[]{"mode"};
         adminOnlyCommands = new String[0];
         packetsInterceptorMap = new HashMap<>();
-        fillPacketsInterceptorMap();
     }
 
     // Called when game initializes
@@ -101,10 +100,6 @@ public class GHPlugin extends Plugin {
                 }
             }
         }
-    }
-
-    // Use this to assign packet interceptor to the map which will be used for registration.
-    protected void fillPacketsInterceptorMap() {
     }
 
     // Register the packet interceptors in PacketInterceptor plugin if it exists.
