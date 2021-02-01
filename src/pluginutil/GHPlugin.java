@@ -2,17 +2,23 @@ package pluginutil;
 
 import arc.ApplicationListener;
 import arc.Core;
+import arc.Events;
+import arc.util.io.Reads;
 import mindustry.Vars;
 import mindustry.gen.Player;
+import mindustry.mod.Mod;
 import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.function.BiPredicate;
 
 import static pluginutil.GHReadWrite.*;
 import static pluginutil.GHReadWrite.GHReadWriteException.NEW_FILE;
@@ -27,6 +33,8 @@ public class GHPlugin extends Plugin {
 
     protected static String[] configurables;
     protected static String[] adminOnlyCommands;
+    protected static HashMap<Integer, HashSet<BiPredicate<Reads, Player>>> packetsInterceptorMap;
+
     protected String PLUGIN, CONFIG_DIR, VERSION;
     protected boolean mode;
 
@@ -36,10 +44,11 @@ public class GHPlugin extends Plugin {
         VERSION = "1.0";
         configurables = new String[]{"mode"};
         adminOnlyCommands = new String[0];
+        packetsInterceptorMap = new HashMap<>();
+        fillPacketsInterceptorMap();
     }
 
     // Called when game initializes
-    @SuppressWarnings("unchecked")
     public void init() {
         try {
             // If update method is declared in the class && the class is not GHPlugin
@@ -57,7 +66,7 @@ public class GHPlugin extends Plugin {
         } catch (NoSuchMethodException ignored) {
         }
 
-        // Load values
+        // Load values from file
         if (configurables.length > 0) {
             try {
                 initMap(getClass(), config_map, configurables);
@@ -70,18 +79,81 @@ public class GHPlugin extends Plugin {
             }
         }
 
-        // Register the admin only commands at EnhancedHelpCommand plugin if it exists.
-        Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
-        if (mod != null) {
-            try {
-                Field add = mod.main.getClass().getField("adminCommands");
-                add.setAccessible(true);
-                HashSet<String> set = (HashSet<String>) add.get(mod.main);
-                set.addAll(Arrays.asList(adminOnlyCommands));
-                log(info, "Admin only command(s) registered.");
-            } catch (Exception e) {
-                e.printStackTrace();
+        registerAdminOnlyCommands();
+        registerPacketInterceptors();
+    }
+
+    // Register the admin only commands in EnhancedHelpCommand plugin if it exists.
+    @SuppressWarnings("unchecked")
+    private void registerAdminOnlyCommands() {
+        if (adminOnlyCommands.length > 0) {
+            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
+            if (mod != null) {
+                try {
+                    Field add = mod.main.getClass().getField("adminCommands");
+                    add.setAccessible(true);
+                    HashSet<String> set = (HashSet<String>) add.get(mod.main);
+                    set.addAll(Arrays.asList(adminOnlyCommands));
+                    log(info, "Admin only command(s) registered.");
+                } catch (Exception e) {
+                    log(warn, "An error has occurred while registering admin only command(s).");
+                    e.printStackTrace();
+                }
             }
+        }
+    }
+
+    // Use this to assign packet interceptor to the map which will be used for registration.
+    protected void fillPacketsInterceptorMap() {
+    }
+
+    // Register the packet interceptors in PacketInterceptor plugin if it exists.
+    private void registerPacketInterceptors() {
+        if (packetsInterceptorMap.size() > 0) {
+            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
+            if (mod != null) {
+                try {
+                    Class<?> cls = mod.main.getClass();
+                    //Find the Getters & Setter of PacketInterceptor
+                    Method getRead = cls.getDeclaredMethod("getRead");
+                    Method getType = cls.getDeclaredMethod("getType");
+                    Method getPlayer = cls.getDeclaredMethod("getPlayer");
+                    Method setOverwrite = cls.getDeclaredMethod("setOverwrite", boolean.class);
+
+                    // Register the onEvent Method of this plugin to the Event Handler.
+                    Events.on(cls, e -> onPacketIntercept(getRead, getType, getPlayer, setOverwrite, mod.main));
+                    log(info, "Packet interceptor(s) registered.");
+                } catch (Exception e) {
+                    log(warn, "An error has occurred while registering packet interceptor(s).");
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+    // On Packet Intercept
+    protected void onPacketIntercept(Method getRead, Method getType, Method getPlayer, Method setOverwrite, Mod mod) {
+        try {
+            Reads read = (Reads) getRead.invoke(mod);
+            int type = (int) getType.invoke(mod);
+            Player player = (Player) getPlayer.invoke(mod);
+
+            if (read == null || type == -1 || player == null) {
+                log(info, f("Packet data missing, aborted. [%s, %s, %s]", read, type, player));
+                return;
+            }
+
+            HashSet<BiPredicate<Reads, Player>> set = packetsInterceptorMap.get(type);
+
+            boolean overwrite = false;
+            for (BiPredicate<Reads, Player> entry : set)
+                overwrite = entry.test(read, player) || overwrite;
+
+            if (overwrite)
+                setOverwrite.invoke(mod, true);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
