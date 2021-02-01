@@ -87,7 +87,7 @@ public class GHPlugin extends Plugin {
             Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
             if (mod != null) {
                 try {
-                    Method add = mod.main.getClass().getDeclaredMethod("adminCommands", String[].class);
+                    Method add = mod.main.getClass().getDeclaredMethod("add", String[].class);
                     add.invoke(mod.main, (Object) adminOnlyCommands);
                     log(info, "Admin only command(s) registered.");
                 } catch (Exception e) {
