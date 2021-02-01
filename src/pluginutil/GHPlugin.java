@@ -138,8 +138,9 @@ public class GHPlugin extends Plugin {
             HashSet<BiPredicate<Reads, Player>> set = packetsInterceptorMap.get(type);
 
             boolean overwrite = false;
-            for (BiPredicate<Reads, Player> entry : set)
-                overwrite = entry.test(read, player) || overwrite;
+            if (set != null)
+                for (BiPredicate<Reads, Player> entry : set)
+                    overwrite = entry.test(read, player) || overwrite;
 
             if (overwrite)
                 setOverwrite.invoke(mod, true);
