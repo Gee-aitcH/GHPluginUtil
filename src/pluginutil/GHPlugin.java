@@ -10,7 +10,8 @@ import mindustry.mod.Plugin;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 import static pluginutil.GHReadWrite.*;
@@ -19,16 +20,15 @@ import static pluginutil.PluginUtil.SendMode.info;
 import static pluginutil.PluginUtil.SendMode.warn;
 import static pluginutil.PluginUtil.*;
 
-@SuppressWarnings({"unused", "SameParameterValue"})
+@SuppressWarnings("unused")
 public class GHPlugin extends Plugin {
 
     private static final LinkedHashMap<String, Field> config_map = new LinkedHashMap<>();
 
-    protected boolean mode;
-
     protected static String[] configurables;
     protected static String[] adminOnlyCommands;
     protected String PLUGIN, CONFIG_DIR, VERSION;
+    protected boolean mode;
 
     public GHPlugin() {
         PLUGIN = this.getClass().getSimpleName();
@@ -39,6 +39,7 @@ public class GHPlugin extends Plugin {
     }
 
     // Called when game initializes
+    @SuppressWarnings("unchecked")
     public void init() {
         try {
             // If update method is declared in the class && the class is not GHPlugin
@@ -73,10 +74,10 @@ public class GHPlugin extends Plugin {
         Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
         if (mod != null) {
             try {
-                Method add = mod.main.getClass().getMethod("add", String.class);
+                Field add = mod.main.getClass().getDeclaredField("adminCommands");
                 add.setAccessible(true);
-                for (String adminOnlyCommand : adminOnlyCommands)
-                    add.invoke(mod.main, adminOnlyCommand);
+                HashSet<String> set = (HashSet<String>) add.get(mod.main);
+                set.addAll(Arrays.asList(adminOnlyCommands));
                 log(info, "Admin only command(s) registered.");
             } catch (Exception e) {
                 e.printStackTrace();
