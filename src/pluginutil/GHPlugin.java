@@ -23,7 +23,7 @@ import static pluginutil.PluginUtil.*;
 public class GHPlugin extends Plugin {
 
     private static final LinkedHashMap<String, Field> config_map = new LinkedHashMap<>();
-    private static final String[] adminOnlyCommands = {"ghtestadminonly"};
+    private static String[] adminOnlyCommands;
 
     protected boolean mode;
 
@@ -35,6 +35,7 @@ public class GHPlugin extends Plugin {
         CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg";
         VERSION = "1.0";
         configurables = new String[]{"mode"};
+        adminOnlyCommands = new String[]{"ghtestadminonly"};
     }
 
     // Called when game initializes
