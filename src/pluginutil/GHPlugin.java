@@ -35,7 +35,7 @@ public class GHPlugin extends Plugin {
         CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg";
         VERSION = "1.0";
         configurables = new String[]{"mode"};
-        adminOnlyCommands = new String[]{"ghtestadminonly"};
+        adminOnlyCommands = new String[0];
     }
 
     // Called when game initializes
