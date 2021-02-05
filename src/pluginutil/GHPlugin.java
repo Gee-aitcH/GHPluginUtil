@@ -6,7 +6,6 @@ import arc.Events;
 import arc.util.io.Reads;
 import mindustry.Vars;
 import mindustry.gen.Player;
-import mindustry.mod.Mod;
 import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
@@ -105,7 +104,7 @@ public class GHPlugin extends Plugin {
             Method getPacketData = cls.getDeclaredMethod("getPacketData");
             Method setOverwrite = cls.getDeclaredMethod("setOverwrite", boolean.class);
             try {
-                if (getClass() == getClass().getMethod("onConnectPacket", Reads.class, int.class, Player.class).getDeclaringClass() &&
+                if (getClass() == getClass().getMethod("onConnectPacket", String.class).getDeclaringClass() &&
                         getClass() != GHPlugin.class) {
                     Class<?>[] clses = cls.getDeclaredClasses();
                     for (Class<?> cls1 : clses) {
@@ -132,7 +131,7 @@ public class GHPlugin extends Plugin {
             }
 
             try {
-                if (getClass() == getClass().getMethod("onDisconnectPacket", Method.class, Method.class, Mod.class).getDeclaringClass() &&
+                if (getClass() == getClass().getMethod("onDisconnectPacket", String.class).getDeclaringClass() &&
                         getClass() != GHPlugin.class) {
                     Class<?>[] clses = cls.getDeclaredClasses();
                     for (Class<?> cls1 : clses) {
