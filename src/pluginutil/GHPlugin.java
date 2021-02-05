@@ -10,17 +10,13 @@ import mindustry.mod.Mod;
 import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.function.BiPredicate;
+import java.util.Arrays;
 
-import static pluginutil.GHReadWrite.*;
-import static pluginutil.GHReadWrite.GHReadWriteException.NEW_FILE;
+import static pluginutil.GHReadWrite.readFromFile;
+import static pluginutil.GHReadWrite.writeToFile;
 import static pluginutil.PluginUtil.GHColors.clean;
 import static pluginutil.PluginUtil.SendMode.info;
 import static pluginutil.PluginUtil.SendMode.warn;
@@ -29,22 +25,17 @@ import static pluginutil.PluginUtil.*;
 @SuppressWarnings("unused")
 public class GHPlugin extends Plugin {
 
-    private static final LinkedHashMap<String, Field> config_map = new LinkedHashMap<>();
-
-    protected static String[] configurables;
-    protected static String[] adminOnlyCommands;
-    protected static HashMap<Integer, HashSet<BiPredicate<Reads, Player>>> packetsInterceptorMap;
-
     protected String PLUGIN, CONFIG_DIR, VERSION;
-    protected boolean mode;
+    protected static String[] adminOnlyCommands;
+    protected GHPluginConfig cfg;
 
     public GHPlugin() {
         PLUGIN = this.getClass().getSimpleName();
-        CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".cfg";
+        CONFIG_DIR = Vars.modDirectory + "/" + PLUGIN + ".json";
         VERSION = "1.0";
-        configurables = new String[]{"mode"};
+        cfg = new GHPluginConfig();
+
         adminOnlyCommands = new String[0];
-        packetsInterceptorMap = new HashMap<>();
     }
 
     // Called when game initializes
@@ -66,16 +57,22 @@ public class GHPlugin extends Plugin {
         }
 
         // Load values from file
-        if (configurables.length > 0) {
-            try {
-                initMap(getClass(), config_map, configurables);
-                read();
-                log(info, "Values loaded from file(s).");
-            } catch (Exception e) {
-                mode = false;
-                log(warn, "An error has occurred. Plugin is turned off.");
-                e.printStackTrace();
+        try {
+            if (getClass() == getClass().getDeclaringClass().getDeclaringClass() &&
+                    getClass() != GHPlugin.class) {
+                Core.app.addListener(new ApplicationListener() {
+                    @Override
+                    public void update() {
+                        GHPlugin.this.update();
+                    }
+                });
+                log(info, "Update method implemented.");
             }
+            read();
+            log(info, "Values loaded from file(s).");
+        } catch (Exception e) {
+            log(warn, "An error has occurred. Plugin is turned off.");
+            e.printStackTrace();
         }
 
         registerAdminOnlyCommands();
@@ -101,53 +98,110 @@ public class GHPlugin extends Plugin {
 
     // Register the packet interceptors in PacketInterceptor plugin if it exists.
     private void registerPacketInterceptors() {
-        if (packetsInterceptorMap.size() > 0) {
+        try {
             Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
-            if (mod != null) {
-                try {
-                    Class<?> cls = mod.main.getClass();
-                    //Find the Getters & Setter of PacketInterceptor
-                    Method getRead = cls.getDeclaredMethod("getRead");
-                    Method getType = cls.getDeclaredMethod("getType");
-                    Method getPlayer = cls.getDeclaredMethod("getPlayer");
-                    Method setOverwrite = cls.getDeclaredMethod("setOverwrite", boolean.class);
+            if (mod == null) return;
+            Class<?> cls = mod.main.getClass();
+            Method getPacketData = cls.getDeclaredMethod("getPacketData");
+            Method setOverwrite = cls.getDeclaredMethod("setOverwrite", boolean.class);
+            try {
+                if (getClass() == getClass().getMethod("onConnectPacket", Reads.class, int.class, Player.class).getDeclaringClass() &&
+                        getClass() != GHPlugin.class) {
+                    Class<?>[] clses = cls.getDeclaredClasses();
+                    for (Class<?> cls1 : clses) {
+                        if (!cls1.getSimpleName().equals("PIConnect")) return;
+                        Events.on(cls, e -> {
+                            try {
+                                Object[] objs = (Object[]) getPacketData.invoke(mod);
+                                if (objs.length != 1 || objs[0] == null) {
+                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
+                                    return;
+                                }
 
-                    // Register the onEvent Method of this plugin to the Event Handler.
-                    Events.on(cls, e -> onPacketIntercept(getRead, getType, getPlayer, setOverwrite, mod.main));
-                    log(info, "Packet interceptor(s) registered.");
-                } catch (Exception e) {
-                    log(warn, "An error has occurred while registering packet interceptor(s).");
-                    e.printStackTrace();
+                                if (onConnectPacket((String) objs[0]))
+                                    setOverwrite.invoke(mod, true);
+                            } catch (IllegalAccessException | InvocationTargetException eee) {
+                                eee.printStackTrace();
+                            }
+                        });
+                        log(info, "onConnectPacket method implemented.");
+                        break;
+                    }
                 }
+            } catch (NoSuchMethodException ignored) {
             }
+
+            try {
+                if (getClass() == getClass().getMethod("onDisconnectPacket", Method.class, Method.class, Mod.class).getDeclaringClass() &&
+                        getClass() != GHPlugin.class) {
+                    Class<?>[] clses = cls.getDeclaredClasses();
+                    for (Class<?> cls1 : clses) {
+                        if (!cls1.getSimpleName().equals("PIDisconnect")) return;
+                        Events.on(cls, e -> {
+                            try {
+                                Object[] objs = (Object[]) getPacketData.invoke(mod);
+                                if (objs.length != 1 || objs[0] == null) {
+                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
+                                    return;
+                                }
+
+                                if (onDisconnectPacket((String) objs[0]))
+                                    setOverwrite.invoke(mod, true);
+                            } catch (IllegalAccessException | InvocationTargetException eee) {
+                                eee.printStackTrace();
+                            }
+                        });
+                        log(info, "onDisconnectPacket method implemented.");
+                        break;
+                    }
+                }
+            } catch (NoSuchMethodException ignored) {
+            }
+
+            try {
+                if (getClass() == getClass().getMethod("onInvokePacket", Reads.class, int.class, Player.class).getDeclaringClass() &&
+                        getClass() != GHPlugin.class) {
+                    Class<?>[] clses = cls.getDeclaredClasses();
+                    for (Class<?> cls1 : clses) {
+                        if (!cls1.getSimpleName().equals("PIInvokePacket")) return;
+                        Events.on(cls, e -> {
+                            try {
+                                Object[] objs = (Object[]) getPacketData.invoke(mod);
+                                if (objs.length != 3 || objs[0] == null || (int) objs[1] == -1 || objs[2] == null) {
+                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
+                                    return;
+                                }
+
+                                if (onInvokePacket((Reads) objs[0], (int) objs[1], (Player) objs[2]))
+                                    setOverwrite.invoke(mod, true);
+                            } catch (IllegalAccessException | InvocationTargetException eee) {
+                                eee.printStackTrace();
+                            }
+                        });
+                        log(info, "onInvokePacket method implemented.");
+                        break;
+                    }
+                }
+            } catch (NoSuchMethodException ignored) {
+            }
+        } catch (NoSuchMethodException nsme) {
+            nsme.printStackTrace();
+            log(info, "Something weird about packet interceptor related methods implemented.");
         }
     }
 
 
     // On Packet Intercept
-    protected void onPacketIntercept(Method getRead, Method getType, Method getPlayer, Method setOverwrite, Mod mod) {
-        try {
-            Reads read = (Reads) getRead.invoke(mod);
-            int type = (int) getType.invoke(mod);
-            Player player = (Player) getPlayer.invoke(mod);
+    protected boolean onConnectPacket(String addressTCP) {
+        return false;
+    }
 
-            if (read == null || type == -1 || player == null) {
-                log(info, f("Packet data missing, aborted. [%s, %s, %s]", read, type, player));
-                return;
-            }
+    protected boolean onDisconnectPacket(String reason) {
+        return false;
+    }
 
-            HashSet<BiPredicate<Reads, Player>> set = packetsInterceptorMap.get(type);
-
-            boolean overwrite = false;
-            if (set != null)
-                for (BiPredicate<Reads, Player> entry : set)
-                    overwrite = entry.test(read, player) || overwrite;
-
-            if (overwrite)
-                setOverwrite.invoke(mod, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    protected boolean onInvokePacket(Reads read, int type, Player player) {
+        return false;
     }
 
     // Update, Override to use.
@@ -206,9 +260,9 @@ public class GHPlugin extends Plugin {
     }
 
     // Write File
-    protected void write() {
+    public void write() {
         try {
-            writeToFile(CONFIG_DIR, config_map, this);
+            writeToFile(CONFIG_DIR, cfg);
             log(info, "Configs Wrote To File.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -216,22 +270,28 @@ public class GHPlugin extends Plugin {
     }
 
     // Read file
-    protected void read() throws IOException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException {
+    public void read() {
         try {
-            readFromFile(CONFIG_DIR, config_map, this);
+            cfg = readFromFile(CONFIG_DIR, cfg);
             log(info, "Configs Read From File.");
-        } catch (GHReadWriteException ghe) {
-            log(warn, f("Error Occurred While Reading: %s", ghe.getMessage()));
-            if (ghe.type == NEW_FILE) {
-                defConfig();
-                write();
-                log(warn, f("Config File Is Populated With Default Values"));
-            }
+        } catch (FileNotFoundException fnfe) {
+            defConfig();
+            write();
         }
     }
 
     // Default configs here
     protected void defConfig() {
-        mode = true;
+        cfg = new GHPluginConfig();
+    }
+
+    public static class GHPluginConfig {
+
+        public GHPluginConfig() {
+            reset();
+        }
+
+        public void reset() {
+        }
     }
 }

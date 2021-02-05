@@ -19,7 +19,7 @@ ext{
 }
 
 dependencies{
-    //implementation 'com.github.google:gson:1.7'
+    implementation 'com.github.google:gson:1.7'
     compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
 }

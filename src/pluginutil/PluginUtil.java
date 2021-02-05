@@ -13,12 +13,12 @@ public class PluginUtil {
     }
 
     // Send message to all players
-    protected static void sendMsg(String color, String msg, String plugin) {
+    public static void sendMsg(String color, String msg, String plugin) {
         sendMsg(color, msg, null, plugin);
     }
 
     // Send message to certain player
-    protected static void sendMsg(String color, String msg, Player player, String plugin) {
+    public static void sendMsg(String color, String msg, Player player, String plugin) {
         String str = plgn + plugin + ": " + color + msg;
         if (player == null)
             Call.sendMessage(str);
