@@ -57,22 +57,6 @@ public class GHPlugin extends Plugin {
 
         // Load values from file
         try {
-            // If update method is declared in the class && the class is not GHPlugin
-            // Then add its update method to update list.
-            if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
-                    getClass() != GHPlugin.class) {
-                Core.app.addListener(new ApplicationListener() {
-                    @Override
-                    public void update() {
-                        GHPlugin.this.update();
-                    }
-                });
-                log(info, "Update method implemented.");
-            }
-        } catch (NoSuchMethodException ignored) {
-        }
-
-        try {
             read();
             log(info, "Values loaded from file(s).");
         } catch (Exception e) {

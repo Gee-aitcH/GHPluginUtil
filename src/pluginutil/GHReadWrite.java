@@ -10,12 +10,11 @@ import java.util.Scanner;
 
 import static pluginutil.PluginUtil.sendLog;
 
-@SuppressWarnings("unused cast")
+@SuppressWarnings("unused cast ResultOfMethodCallIgnored")
 public class GHReadWrite {
 
     public static void writeToFile(String dir, Object obj) throws IOException {
-        if (new File(dir).createNewFile())
-            System.out.println("New File Created.");
+        new File(dir).createNewFile();
         FileWriter writer = new FileWriter(dir);
         writer.write(new Gson().toJson(obj));
         writer.close();
@@ -31,7 +30,6 @@ public class GHReadWrite {
         return obj;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void moveOldFile(File file, String dir, String plugin) throws IOException {
         if (file == null)
             return;
