@@ -65,23 +65,23 @@ public class GHPlugin extends Plugin {
             e.printStackTrace();
         }
 
-        registerAdminOnlyCommands();
-        registerPacketInterceptors();
+        Mods.LoadedMod ehc = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
+        if (ehc != null) Events.on(ehc.main.getClass(), e -> registerAdminOnlyCommands(ehc.main));
+
+        Mods.LoadedMod pi = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
+        if (pi != null) Events.on(pi.main.getClass(), e -> registerPacketInterceptors(pi.main));
     }
 
     // Register the admin only commands in EnhancedHelpCommand plugin if it exists.
-    private void registerAdminOnlyCommands() {
+    private void registerAdminOnlyCommands(Mod ehc) {
         if (adminOnlyCommands.length > 0) {
-            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
-            if (mod != null) {
-                try {
-                    Method add = mod.main.getClass().getDeclaredMethod("add", String[].class);
-                    add.invoke(mod.main, (Object) adminOnlyCommands);
-                    log(info, "Admin only command(s) registered.");
-                } catch (Exception e) {
-                    log(warn, "An error has occurred while registering admin only command(s).");
-                    e.printStackTrace();
-                }
+            try {
+                Method add = ehc.getClass().getDeclaredMethod("add", String[].class);
+                add.invoke(ehc, (Object) adminOnlyCommands);
+                log(info, "Admin only command(s) registered.");
+            } catch (Exception e) {
+                log(warn, "An error has occurred while registering admin only command(s).");
+                e.printStackTrace();
             }
         }
     }
@@ -90,18 +90,14 @@ public class GHPlugin extends Plugin {
 
     // Register the packet interceptors in PacketInterceptor plugin if it exists.
     // e.g. onConnect(), onDisconnect(), onConnectPacket(), on
-    private void registerPacketInterceptors() {
+    private void registerPacketInterceptors(Mod pi) {
         try {
-            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
-            if (mod == null) return;
-
-            Mod piMod = mod.main;
-            Class<?> modCls = piMod.getClass();
+            Class<?> modCls = pi.getClass();
             Field listenerClasses = modCls.getDeclaredField("listenerClasses");
             Method getPacketData = modCls.getDeclaredMethod("getPacketData");
             Method setOverwrite = modCls.getDeclaredMethod("setOverwrite", boolean.class);
 
-            for (Class<?> cls : (Class<?>[]) listenerClasses.get(piMod)) {
+            for (Class<?> cls : (Class<?>[]) listenerClasses.get(pi)) {
                 Method onPacketMethod;
                 String methodName = "on" + cls.getSimpleName().substring(0, 1).toUpperCase() + cls.getSimpleName().substring(1);
                 try {
@@ -113,9 +109,9 @@ public class GHPlugin extends Plugin {
 
                 Events.on(cls, e -> {
                     try {
-                        Object[] objs = (Object[]) getPacketData.invoke(piMod);
+                        Object[] objs = (Object[]) getPacketData.invoke(pi);
                         if ((boolean) onPacketMethod.invoke(this, objs))
-                            setOverwrite.invoke(piMod, true);
+                            setOverwrite.invoke(pi, true);
                     } catch (IllegalAccessException | InvocationTargetException illegalAccessException) {
                         illegalAccessException.printStackTrace();
                     }
