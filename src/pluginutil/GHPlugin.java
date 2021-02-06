@@ -137,12 +137,12 @@ public class GHPlugin extends Plugin {
 
     // Send message to all players
     protected void msg(String msg) {
-        sendMsg(clean, msg, null);
+        sendMsg(clean, msg, PLUGIN);
     }
 
     // Send message to all players
     protected void msg(String color, String msg) {
-        sendMsg(color, msg, null);
+        sendMsg(color, msg, PLUGIN);
     }
 
     // Send message to certain player
