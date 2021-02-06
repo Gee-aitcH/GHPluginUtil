@@ -57,7 +57,9 @@ public class GHPlugin extends Plugin {
 
         // Load values from file
         try {
-            if (getClass() == getClass().getDeclaringClass().getDeclaringClass() &&
+            // If update method is declared in the class && the class is not GHPlugin
+            // Then add its update method to update list.
+            if (getClass() == getClass().getMethod("update").getDeclaringClass() &&
                     getClass() != GHPlugin.class) {
                 Core.app.addListener(new ApplicationListener() {
                     @Override
@@ -67,10 +69,14 @@ public class GHPlugin extends Plugin {
                 });
                 log(info, "Update method implemented.");
             }
+        } catch (NoSuchMethodException ignored) {
+        }
+
+        try {
             read();
             log(info, "Values loaded from file(s).");
         } catch (Exception e) {
-            log(warn, "An error has occurred. Plugin is turned off.");
+            log(warn, "An error has occurred while loading values. Plugin is turned off.");
             e.printStackTrace();
         }
 
