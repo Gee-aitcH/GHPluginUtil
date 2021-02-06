@@ -3,23 +3,23 @@ package pluginutil;
 import arc.ApplicationListener;
 import arc.Core;
 import arc.Events;
-import arc.util.io.Reads;
 import mindustry.Vars;
 import mindustry.gen.Player;
 import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 import static pluginutil.GHReadWrite.readFromFile;
 import static pluginutil.GHReadWrite.writeToFile;
 import static pluginutil.PluginUtil.GHColors.clean;
 import static pluginutil.PluginUtil.SendMode.info;
 import static pluginutil.PluginUtil.SendMode.warn;
-import static pluginutil.PluginUtil.*;
+import static pluginutil.PluginUtil.sendLog;
+import static pluginutil.PluginUtil.sendMsg;
 
 @SuppressWarnings("unused")
 public class GHPlugin extends Plugin {
@@ -101,112 +101,46 @@ public class GHPlugin extends Plugin {
         }
     }
 
+//    private HashMap<Class<?>, String> pInterceptors = new HashMap<>();
+
     // Register the packet interceptors in PacketInterceptor plugin if it exists.
+    // e.g. onConnect(), onDisconnect(), onConnectPacket(), on
     private void registerPacketInterceptors() {
         try {
-            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
-            if (mod == null) return;
-            Class<?> cls = mod.main.getClass();
-            Method getPacketData = cls.getDeclaredMethod("getPacketData");
-            Method setOverwrite = cls.getDeclaredMethod("setOverwrite", boolean.class);
-            try {
-                if (getClass() == getClass().getMethod("onConnectPacket", String.class).getDeclaringClass() &&
-                        getClass() != GHPlugin.class) {
-                    Class<?>[] clses = cls.getDeclaredClasses();
-                    for (Class<?> cls1 : clses) {
-                        if (!cls1.getSimpleName().equals("PIConnect")) return;
-                        Events.on(cls, e -> {
-                            try {
-                                Object[] objs = (Object[]) getPacketData.invoke(mod);
-                                if (objs.length != 1 || objs[0] == null) {
-                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
-                                    return;
-                                }
+            Mods.LoadedMod piMod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
+            if (piMod == null) return;
 
-                                if (onConnectPacket((String) objs[0]))
-                                    setOverwrite.invoke(mod, true);
-                            } catch (IllegalAccessException | InvocationTargetException eee) {
-                                eee.printStackTrace();
-                            }
-                        });
-                        log(info, "onConnectPacket method implemented.");
-                        break;
-                    }
+            Class<?> modCls = piMod.main.getClass();
+            Field listenerClasses = modCls.getDeclaredField("listenerClasses");
+            Method getPacketData = modCls.getDeclaredMethod("getPacketData");
+            Method setOverwrite = modCls.getDeclaredMethod("setOverwrite", boolean.class);
+
+            for (Class<?> cls : (Class<?>[]) listenerClasses.get(piMod)) {
+                Method onPacketMethod;
+                String methodName = "on" + cls.getSimpleName().substring(0, 1).toUpperCase() + cls.getSimpleName().substring(1);
+                try {
+                    onPacketMethod = getClass().getDeclaredMethod(methodName, Object[].class);
+                    onPacketMethod.setAccessible(true);
+                } catch (NoSuchMethodException e) {
+                    return;
                 }
-            } catch (NoSuchMethodException ignored) {
-            }
 
-            try {
-                if (getClass() == getClass().getMethod("onDisconnectPacket", String.class).getDeclaringClass() &&
-                        getClass() != GHPlugin.class) {
-                    Class<?>[] clses = cls.getDeclaredClasses();
-                    for (Class<?> cls1 : clses) {
-                        if (!cls1.getSimpleName().equals("PIDisconnect")) return;
-                        Events.on(cls, e -> {
-                            try {
-                                Object[] objs = (Object[]) getPacketData.invoke(mod);
-                                if (objs.length != 1 || objs[0] == null) {
-                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
-                                    return;
-                                }
-
-                                if (onDisconnectPacket((String) objs[0]))
-                                    setOverwrite.invoke(mod, true);
-                            } catch (IllegalAccessException | InvocationTargetException eee) {
-                                eee.printStackTrace();
-                            }
-                        });
-                        log(info, "onDisconnectPacket method implemented.");
-                        break;
+                Events.on(cls, e -> {
+                    try {
+                        Object[] objs = (Object[]) getPacketData.invoke(piMod);
+                        if ((boolean) onPacketMethod.invoke(this, objs))
+                            setOverwrite.invoke(piMod, true);
+                    } catch (IllegalAccessException | InvocationTargetException illegalAccessException) {
+                        illegalAccessException.printStackTrace();
                     }
-                }
-            } catch (NoSuchMethodException ignored) {
+                });
+                log(info, methodName + " method implemented.");
+                break;
             }
-
-            try {
-                if (getClass() == getClass().getMethod("onInvokePacket", Reads.class, int.class, Player.class).getDeclaringClass() &&
-                        getClass() != GHPlugin.class) {
-                    Class<?>[] clses = cls.getDeclaredClasses();
-                    for (Class<?> cls1 : clses) {
-                        if (!cls1.getSimpleName().equals("PIInvokePacket")) return;
-                        Events.on(cls, e -> {
-                            try {
-                                Object[] objs = (Object[]) getPacketData.invoke(mod);
-                                if (objs.length != 3 || objs[0] == null || (int) objs[1] == -1 || objs[2] == null) {
-                                    log(info, f("Malformed packet data, aborted. Data: %s", Arrays.toString(objs)));
-                                    return;
-                                }
-
-                                if (onInvokePacket((Reads) objs[0], (int) objs[1], (Player) objs[2]))
-                                    setOverwrite.invoke(mod, true);
-                            } catch (IllegalAccessException | InvocationTargetException eee) {
-                                eee.printStackTrace();
-                            }
-                        });
-                        log(info, "onInvokePacket method implemented.");
-                        break;
-                    }
-                }
-            } catch (NoSuchMethodException ignored) {
-            }
-        } catch (NoSuchMethodException nsme) {
+        } catch (NoSuchMethodException | NoSuchFieldException | IllegalAccessException nsme) {
             nsme.printStackTrace();
             log(info, "Something weird about packet interceptor related methods implemented.");
         }
-    }
-
-
-    // On Packet Intercept
-    protected boolean onConnectPacket(String addressTCP) {
-        return false;
-    }
-
-    protected boolean onDisconnectPacket(String reason) {
-        return false;
-    }
-
-    protected boolean onInvokePacket(Reads read, int type, Player player) {
-        return false;
     }
 
     // Update, Override to use.
