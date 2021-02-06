@@ -94,36 +94,35 @@ public class GHPlugin extends Plugin {
     // e.g. onConnect(), onDisconnect(), onConnectPacket(), on
     private void registerPacketInterceptors(Mod pi) {
         try {
+            final Mod thisMod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals(PLUGIN)).main;
             Class<?> modCls = pi.getClass();
             Field listenerClasses = modCls.getDeclaredField("listenerClasses");
-            Method getPacketData = modCls.getDeclaredMethod("getPacketData");
-            Method setOverwrite = modCls.getDeclaredMethod("setOverwrite", boolean.class);
+            final Method getPacketData = modCls.getDeclaredMethod("getPacketData");
+            final Method setOverwrite = modCls.getDeclaredMethod("setOverwrite", boolean.class);
 
             for (Class<?> cls : (Class<?>[]) listenerClasses.get(pi)) {
-                Method onPacketMethod;
-                String methodName = "on" + cls.getSimpleName().substring(0, 1).toUpperCase() + cls.getSimpleName().substring(1);
+                final String methodName = "on" + cls.getSimpleName().substring(0, 1).toUpperCase() + cls.getSimpleName().substring(1);
+                final Method onPacketMethod;
                 try {
-                    onPacketMethod = getClass().getDeclaredMethod(methodName, Object[].class);
+                    onPacketMethod = thisMod.getClass().getDeclaredMethod(methodName, Object.class);
                     onPacketMethod.setAccessible(true);
                 } catch (NoSuchMethodException e) {
-                    return;
+                    continue;
                 }
-
                 Events.on(cls, e -> {
                     try {
-                        Object[] objs = (Object[]) getPacketData.invoke(pi);
-                        if ((boolean) onPacketMethod.invoke(this, objs))
+                        Object objs = getPacketData.invoke(pi);
+                        if ((boolean) onPacketMethod.invoke(thisMod, objs))
                             setOverwrite.invoke(pi, true);
                     } catch (IllegalAccessException | InvocationTargetException illegalAccessException) {
                         illegalAccessException.printStackTrace();
                     }
                 });
-                log(info, methodName + " method implemented.");
-                break;
+                log(methodName + " method implemented.");
             }
         } catch (NoSuchMethodException | NoSuchFieldException | IllegalAccessException nsme) {
             nsme.printStackTrace();
-            log(info, "Something weird about packet interceptor related methods implemented.");
+            log("Error occurred while implementing on packet methods.");
         }
     }
 
