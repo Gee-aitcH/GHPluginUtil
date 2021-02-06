@@ -5,6 +5,7 @@ import arc.Core;
 import arc.Events;
 import mindustry.Vars;
 import mindustry.gen.Player;
+import mindustry.mod.Mod;
 import mindustry.mod.Mods;
 import mindustry.mod.Plugin;
 
@@ -91,10 +92,11 @@ public class GHPlugin extends Plugin {
     // e.g. onConnect(), onDisconnect(), onConnectPacket(), on
     private void registerPacketInterceptors() {
         try {
-            Mods.LoadedMod piMod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
-            if (piMod == null) return;
+            Mods.LoadedMod mod = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
+            if (mod == null) return;
 
-            Class<?> modCls = piMod.main.getClass();
+            Mod piMod = mod.main;
+            Class<?> modCls = piMod.getClass();
             Field listenerClasses = modCls.getDeclaredField("listenerClasses");
             Method getPacketData = modCls.getDeclaredMethod("getPacketData");
             Method setOverwrite = modCls.getDeclaredMethod("setOverwrite", boolean.class);
