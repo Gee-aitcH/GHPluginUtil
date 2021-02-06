@@ -4,6 +4,7 @@ import arc.ApplicationListener;
 import arc.Core;
 import arc.Events;
 import mindustry.Vars;
+import mindustry.game.EventType;
 import mindustry.gen.Player;
 import mindustry.mod.Mod;
 import mindustry.mod.Mods;
@@ -65,11 +66,14 @@ public class GHPlugin extends Plugin {
             e.printStackTrace();
         }
 
-        Mods.LoadedMod ehc = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
-        if (ehc != null) Events.on(ehc.main.getClass(), e -> registerAdminOnlyCommands(ehc.main));
+        Events.on(EventType.ServerLoadEvent.class, e -> {
+            Mods.LoadedMod ehc = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("EnhancedHelpCommand"));
+            if (ehc != null) Events.on(ehc.main.getClass(), ee -> registerAdminOnlyCommands(ehc.main));
 
-        Mods.LoadedMod pi = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
-        if (pi != null) Events.on(pi.main.getClass(), e -> registerPacketInterceptors(pi.main));
+            Mods.LoadedMod pi = Vars.mods.list().find(m -> m.main != null && m.main.getClass().getSimpleName().equals("PacketInterceptor"));
+            if (pi != null)
+                Events.on(pi.main.getClass(), ee -> registerPacketInterceptors(pi.main));
+        });
     }
 
     // Register the admin only commands in EnhancedHelpCommand plugin if it exists.
