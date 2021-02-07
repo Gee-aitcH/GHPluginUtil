@@ -183,9 +183,14 @@ public class GHPlugin extends Plugin {
 
     // Write File
     public void write() {
+        write(false);
+    }
+
+    public void write(boolean silence) {
         try {
             writeToFile(CONFIG_DIR, cfg);
-            log(info, "Configs Wrote To File.");
+            if (!silence)
+                log(info, "Configs Wrote To File.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -193,9 +198,14 @@ public class GHPlugin extends Plugin {
 
     // Read file
     public void read() {
+        read(false);
+    }
+
+    public void read(boolean silence) {
         try {
             cfg = readFromFile(CONFIG_DIR, cfg);
-            log(info, "Configs Read From File.");
+            if (!silence)
+                log(info, "Configs Read From File.");
         } catch (FileNotFoundException fnfe) {
             defConfig();
             write();
