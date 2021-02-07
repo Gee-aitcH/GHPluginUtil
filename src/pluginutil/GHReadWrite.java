@@ -30,7 +30,7 @@ public class GHReadWrite {
         return obj;
     }
 
-    public static void moveOldFile(File file, String dir, String plugin, boolean silence) throws IOException {
+    public static void moveOldFile(File file, String dir, String plugin) throws IOException {
         if (file == null)
             return;
         file.renameTo(new File(dir + ".outdated"));
