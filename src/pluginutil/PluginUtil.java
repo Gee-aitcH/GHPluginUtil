@@ -4,17 +4,12 @@ import arc.util.Log;
 import mindustry.gen.Call;
 import mindustry.gen.Player;
 
-import static pluginutil.PluginUtil.GHColors.plgn;
+import static pluginutil.GHPal.plgn;
 
 @SuppressWarnings({"unused", "SameParameterValue"})
 public class PluginUtil {
     public static String f(String str, Object... args) {
         return String.format(str, args);
-    }
-
-    // Send message to all players
-    public static void sendMsg(String color, String msg, String plugin) {
-        sendMsg(color, msg, null, plugin);
     }
 
     // Send message to certain player
@@ -27,30 +22,21 @@ public class PluginUtil {
     }
 
     // Send message to console as Log
-    public static void sendLog(int mode, String msg, String plugin) {
+    public static void sendLog(LogMode mode, String msg, String plugin) {
         String str = plugin + ": " + msg;
         switch (mode) {
-            case 0 -> Log.info(str);
-            case 1 -> Log.warn(str);
-            case 2 -> Log.err(str);
-            case 3 -> Log.debug(str);
+            case info -> Log.info(str);
+            case warn -> Log.warn(str);
+            case err -> Log.err(str);
+            case debug -> Log.debug(str);
         }
     }
 
     // Send message to certain player or  to console as Log based on factor.
-    public static void output(int mode, String color, String msg, Player player, Boolean server, String plugin) {
-        if (server == null || server)
+    public static void output(LogMode mode, String color, String msg, Player player, OutputMode outputMode, String plugin) {
+        if (outputMode == OutputMode.toAll || outputMode == OutputMode.toServer)
             sendLog(mode, msg, plugin);
-        if (server == null || !server)
+        if (outputMode == OutputMode.toAll || outputMode == OutputMode.toClient)
             sendMsg(color, msg, player, plugin);
-    }
-
-    public static class GHColors {
-        public static final String plgn = "[scarlet]", pass = "[green]", announce = "[orange]", accent = "[accent]", clean = "[white]", ignore = "[lightgray]";
-    }
-
-    public static class SendMode {
-        public static final int info = 0, warn = 1, err = 2, debug = 3;
-        public static final Boolean toAll = null, toServer = true, toClient = false;
     }
 }

@@ -39,7 +39,7 @@ public class GHReadWrite {
         while (reader.hasNextLine())
             writer.write(reader.nextLine() + "\n");
         writer.close();
-        sendLog(0, "Outdated Config File Found. Moved to Directory \n[" + file.getAbsolutePath() + "].\n" +
+        sendLog(LogMode.info, "Outdated Config File Found. Moved to Directory \n[" + file.getAbsolutePath() + "].\n" +
                 "Outdated Config will be overwrite when a newer Outdated Config is detected.", plugin);
     }
 
