@@ -140,7 +140,8 @@ public abstract class GHPlugin extends Plugin {
     // Register the packet interceptors in PacketInterceptor plugin if it exists.
     private void registerPacketInterceptors(Mod pi) {
         try {
-            Method getVersion = pi.getClass().getDeclaredMethod("getVersion");
+            Method getVersion = pi.getClass().getMethod("getVersion");
+
             if (!getVersion.invoke(pi).equals("1.1"))
                 return;
 
@@ -161,8 +162,8 @@ public abstract class GHPlugin extends Plugin {
             }
             log(success + " packet interceptor(s) registered.");
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
             log("Error occurred while implementing on packet methods.");
+            e.printStackTrace();
         }
     }
 
