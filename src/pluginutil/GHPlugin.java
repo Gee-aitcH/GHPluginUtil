@@ -124,13 +124,13 @@ public abstract class GHPlugin extends Plugin {
     // Register the admin only commands in EnhancedHelpCommand plugin if it exists.
     private void registerAdminOnlyCommands(Mod ehc) {
         try {
-            Method getVersion = ehc.getClass().getDeclaredMethod("getVersion");
+            Method getVersion = ehc.getClass().getMethod("getVersion");
             if (!getVersion.invoke(ehc).equals("1.1"))
                 return;
 
             Method add = ehc.getClass().getDeclaredMethod("add", String[].class);
             add.invoke(ehc, (Object) adminOnlyCommands);
-            log("Admin only command(s) registered.");
+            log(adminOnlyCommands.length + " admin only command(s) registered.");
         } catch (Exception e) {
             log(LogMode.warn, "An error has occurred while registering admin only command(s).");
             e.printStackTrace();
@@ -141,7 +141,6 @@ public abstract class GHPlugin extends Plugin {
     private void registerPacketInterceptors(Mod pi) {
         try {
             Method getVersion = pi.getClass().getMethod("getVersion");
-
             if (!getVersion.invoke(pi).equals("1.1"))
                 return;
 
